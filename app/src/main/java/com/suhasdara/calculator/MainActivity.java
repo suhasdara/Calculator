@@ -349,12 +349,13 @@ public class MainActivity extends AppCompatActivity {
 
                 String eqn = equation.toString();
                 if(eqn.length() == 0) {
-                    openParenLogic();
+                    openParenLogic(false);
                 } else {
                     if(endsWithOperation(eqn) || endsWithOpenParen(eqn)) {
-                        openParenLogic();
+                        openParenLogic(false);
                     } else {
-                        Toast.makeText(MainActivity.this, "Equation currently ends on a non-operation symbol", Toast.LENGTH_LONG).show();
+                        openParenLogic(true);
+                        /*Toast.makeText(MainActivity.this, "Equation currently ends on a non-operation symbol", Toast.LENGTH_LONG).show();*/
                     }
                 }
             }
@@ -393,10 +394,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void openParenLogic() {
+    private void openParenLogic(boolean addMult) {
         checkEndingDecimal();
+        currNegFlag = false;
         num = new StringBuilder();
-        equation.append("(");
+        if(addMult) {
+            equation.append("×(");
+        } else {
+            equation.append("(");
+        }
         setTextFields();
     }
 
