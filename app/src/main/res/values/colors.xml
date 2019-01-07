@@ -5,4 +5,5 @@
     <color name="colorAccent">#d81b60</color>
     <color name="lemon_yellow">#f7f14a</color>
     <color name="light_red">#ff8080</color>
+    <color name="very_light_red">#ffcccc</color>
 </resources>

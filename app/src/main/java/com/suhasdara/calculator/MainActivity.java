@@ -19,7 +19,8 @@ public class MainActivity extends AppCompatActivity {
     Button bClose, bOpen, bDiv, bMul, bSub, bAdd, bEq, bSwitch;
     ImageButton bDel;
     Button bC, bCE;
-    TextView tNum, tEqn;
+    TextView tNum;
+    AutoResizeTextView tEqn;
 
     StringBuilder num;
     StringBuilder equation;
@@ -142,8 +143,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if(equation.length() == 65) {
-            Toast.makeText(MainActivity.this, "Maximum number of characters reached (65)", Toast.LENGTH_LONG).show();
+        if(equation.length() == 150) {
+            Toast.makeText(MainActivity.this, "Maximum number of characters reached (150)", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -518,11 +519,11 @@ public class MainActivity extends AppCompatActivity {
         tEqn.setText(equation);
 
         if(!equationValid(eqn)) {
-            tEqn.setBackgroundColor(0xffff8080);
+            tEqn.setBackgroundColor(getResources().getColor(R.color.very_light_red));
             tEqn.setTextColor(getResources().getColor(android.R.color.black));
         } else {
             tEqn.setBackgroundColor(getResources().getColor(android.R.color.white));
-            tEqn.setTextColor(0xFF008577);
+            tEqn.setTextColor(getResources().getColor(R.color.colorPrimary));
         }
     }
 }
