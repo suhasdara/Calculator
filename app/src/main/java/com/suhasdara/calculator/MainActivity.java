@@ -15,20 +15,24 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 
 public class MainActivity extends AppCompatActivity {
-    Button b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, bDec;
-    Button bClose, bOpen, bDiv, bMul, bSub, bAdd, bEq, bSwitch;
-    ImageButton bDel;
-    Button bC, bCE;
-    TextView tNum;
-    AutoResizeTextView tEqn;
+    private Button b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, bDec;
+    private Button bClose, bOpen, bDiv, bMul, bSub, bAdd, bEq, bSwitch;
+    private ImageButton bDel;
+    private Button bC, bCE;
+    private TextView tNum;
+    private AutoResizeTextView tEqn;
 
-    StringBuilder num;
-    StringBuilder equation;
-    boolean currNegFlag;
-    boolean answerSet;
+    private StringBuilder num;
+    private StringBuilder equation;
 
-    BigDecimal prevAnswer = null;
-    String lastOperation = "";
+    private boolean currNegFlag;
+    private boolean answerSet;
+    private BigDecimal prevAnswer = null;
+    private String lastOperation = "";
+
+    private static final int DIGIT_LIMIT = 15;
+    private static final int CHAR_LIMIT = 150;
+    private static final MathContext MC = new MathContext(DIGIT_LIMIT, RoundingMode.HALF_EVEN);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,13 +142,13 @@ public class MainActivity extends AppCompatActivity {
             currNegFlag = false;
         }
 
-        if((currNegFlag && num.length() == 16) || (!currNegFlag && num.length() == 15)) {
-            Toast.makeText(MainActivity.this, "Maximum number of digits reached (15)", Toast.LENGTH_LONG).show();
+        if((currNegFlag && num.length() == DIGIT_LIMIT + 1) || (!currNegFlag && num.length() == DIGIT_LIMIT)) {
+            Toast.makeText(MainActivity.this, "Maximum number of digits reached (" + DIGIT_LIMIT + ")", Toast.LENGTH_LONG).show();
             return;
         }
 
-        if(equation.length() == 150) {
-            Toast.makeText(MainActivity.this, "Maximum number of characters reached (150)", Toast.LENGTH_LONG).show();
+        if(equationLimitReached()) {
+            Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -156,7 +160,10 @@ public class MainActivity extends AppCompatActivity {
                 num.append(digit);
                 equation.append(digit);
             } else {
-                Toast.makeText(MainActivity.this, "Enter an operation before a digit after close parenthesis", Toast.LENGTH_LONG).show();
+                num.append(digit);
+                equation.append("×");
+                equation.append(digit);
+                /*Toast.makeText(MainActivity.this, "Enter an operation before a digit after close parenthesis", Toast.LENGTH_LONG).show();*/
             }
         }
 
@@ -197,6 +204,10 @@ public class MainActivity extends AppCompatActivity {
             if(num.length() == 1 && num.charAt(0) == '-') {
                 num = new StringBuilder();
             }
+        } else {
+            if(equation.length() > 1) {
+                num = getNextToken();
+            }
         }
 
         if(equation.length() != 0) {
@@ -212,6 +223,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setTextFields();
+    }
+
+    private StringBuilder getNextToken() {
+        StringBuilder result = new StringBuilder();
+        int index = equation.length() - 2;
+        while(index >= 0 && (Character.isDigit(equation.charAt(index)) || equation.charAt(index) == '.')) {
+            result.insert(0, equation.charAt(index));
+            index--;
+        }
+
+        if(index >= 0 && equation.charAt(index) == '-') {
+            result.insert(0, '-');
+            currNegFlag = true;
+            equation.append(')');
+        }
+
+        return result;
     }
 
     private void clearLogic() {
@@ -261,6 +289,11 @@ public class MainActivity extends AppCompatActivity {
             setTextFields();
 
             answerSet = false;
+            return;
+        }
+
+        if(equationLimitReached()) {
+            Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -315,6 +348,11 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
+                if(equationLimitReached()) {
+                    Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 if(num.length() != 0) {
                     if(currNegFlag) {
                         num.deleteCharAt(0);
@@ -347,6 +385,11 @@ public class MainActivity extends AppCompatActivity {
                     currNegFlag = false;
                 }
 
+                if(equationLimitReached()) {
+                    Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 String eqn = equation.toString();
                 if(eqn.length() == 0) {
                     openParenLogic(false);
@@ -372,6 +415,11 @@ public class MainActivity extends AppCompatActivity {
                     currNegFlag = false;
                 }
 
+                if(equationLimitReached()) {
+                    Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 int[] parenCounts = countsParens(equation.toString().toCharArray());
                 boolean expressionEmpty = endsWithOpenParen(equation.toString());
                 boolean fulfilled = parenCounts[0] == parenCounts[1];
@@ -379,6 +427,7 @@ public class MainActivity extends AppCompatActivity {
                 if(!endsWithOperation(equation.toString()) && !expressionEmpty && !fulfilled) {
                     checkEndingDecimal();
                     num = new StringBuilder();
+                    currNegFlag = false;
                     equation.append(")");
                     setTextFields();
                 }
@@ -388,7 +437,7 @@ public class MainActivity extends AppCompatActivity {
                 } else if(expressionEmpty) {
                     Toast.makeText(MainActivity.this, "Parenthesis expression is empty", Toast.LENGTH_LONG).show();
                 } else if(fulfilled) {
-                    Toast.makeText(MainActivity.this, "Enough closing parentheses already exist", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "Could not find matching open parenthesis", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -413,7 +462,7 @@ public class MainActivity extends AppCompatActivity {
                 String equat = equation.toString();
 
                 if(answerSet) {
-                    BigDecimal ans = new BigDecimal(prevAnswer.toPlainString(), new MathContext(15, RoundingMode.HALF_EVEN));
+                    BigDecimal ans = getDisplayAnswer(prevAnswer);
 
                     String PA_Eq = prevAnswer.toPlainString();
                     String PA_Disp = ans.toString();
@@ -464,7 +513,7 @@ public class MainActivity extends AppCompatActivity {
         answerSet = true;
         prevAnswer = answer;
         lastOperation = evaluator.getLastOperation().replace('*', '×').replace('/', '÷');
-        answer = new BigDecimal(answer.toPlainString(), new MathContext(15, RoundingMode.HALF_EVEN));
+        answer = getDisplayAnswer(answer);
         String ans = answer.toString();
         num = new StringBuilder(ans);
 
@@ -518,18 +567,26 @@ public class MainActivity extends AppCompatActivity {
         return parenEqual && !opEnd;
     }
 
+    private boolean equationLimitReached() {
+        return (equation.length() >= CHAR_LIMIT) & equationValid(equation.toString());
+    }
+
+    private BigDecimal getDisplayAnswer(BigDecimal answer) {
+        return new BigDecimal(answer.toPlainString(), MC).stripTrailingZeros();
+    }
+
     private void setTextFields() {
         String eqn = equation.toString();
 
         tNum.setText(num);
         tEqn.setText(equation);
 
-        if(!equationValid(eqn)) {
-            tEqn.setBackgroundColor(getResources().getColor(R.color.very_light_red));
-            tEqn.setTextColor(getResources().getColor(android.R.color.black));
-        } else {
+        if(equationValid(eqn)) {
             tEqn.setBackgroundColor(getResources().getColor(android.R.color.white));
             tEqn.setTextColor(getResources().getColor(R.color.colorPrimary));
+        } else {
+            tEqn.setBackgroundColor(getResources().getColor(R.color.very_light_red));
+            tEqn.setTextColor(getResources().getColor(android.R.color.black));
         }
     }
 }

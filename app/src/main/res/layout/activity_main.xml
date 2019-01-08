@@ -40,6 +40,7 @@
                 android:layout_weight="1"
                 android:background="@android:color/background_light"
                 android:gravity="center|end"
+                android:maxLines="4"
                 android:scrollbars="none"
                 android:textColor="@color/colorPrimary"
                 android:textSize="20sp" />
@@ -50,7 +51,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="5"
                 android:background="@drawable/button_background_delete"
-                android:contentDescription="Backspace"
+                android:contentDescription="@string/backspace"
                 android:tint="@color/light_red"
                 app:srcCompat="@android:drawable/ic_input_delete" />
         </LinearLayout>
@@ -79,7 +80,7 @@
                         android:background="@drawable/button_background"
                         android:includeFontPadding="false"
                         android:minHeight="0dp"
-                        android:text="CE"
+                        android:text="@string/clear_all"
                         android:textColor="@android:color/holo_red_dark"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -92,7 +93,7 @@
                         android:background="@drawable/button_background"
                         android:includeFontPadding="false"
                         android:minHeight="0dp"
-                        android:text="C"
+                        android:text="@string/clear"
                         android:textColor="@android:color/holo_red_light"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -105,7 +106,7 @@
                     android:layout_height="match_parent"
                     android:layout_weight="0.25"
                     android:background="@drawable/button_background"
-                    android:text="("
+                    android:text="@string/open_par"
                     android:textColor="@android:color/holo_blue_dark"
                     android:textSize="24sp"
                     android:textStyle="bold" />
@@ -116,7 +117,7 @@
                     android:layout_height="match_parent"
                     android:layout_weight="0.25"
                     android:background="@drawable/button_background"
-                    android:text=")"
+                    android:text="@string/close_par"
                     android:textColor="@android:color/holo_blue_dark"
                     android:textSize="24sp"
                     android:textStyle="bold" />
@@ -127,196 +128,216 @@
                     android:layout_height="match_parent"
                     android:layout_weight="0.25"
                     android:background="@drawable/button_background"
-                    android:text="÷"
+                    android:text="@string/divide"
                     android:textColor="@android:color/holo_blue_dark"
                     android:textSize="24sp"
                     android:textStyle="bold" />
             </TableRow>
 
             <TableRow
+                style="@style/Base.Widget.AppCompat.ButtonBar"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1">
 
                 <Button
                     android:id="@+id/b7"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="7"
+                    android:text="@string/seven"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/b8"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="8"
+                    android:text="@string/eight"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/b9"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="9"
+                    android:text="@string/nine"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/bMul"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="×"
+                    android:text="@string/multiply"
                     android:textColor="@android:color/holo_blue_dark"
                     android:textSize="24sp"
                     android:textStyle="bold" />
             </TableRow>
 
             <TableRow
+                style="@style/Base.Widget.AppCompat.ButtonBar"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1">
 
                 <Button
                     android:id="@+id/b4"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="4"
+                    android:text="@string/four"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/b5"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="5"
+                    android:text="@string/five"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/b6"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="6"
+                    android:text="@string/six"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/bSub"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="-"
+                    android:text="@string/minus"
                     android:textColor="@android:color/holo_blue_dark"
                     android:textSize="24sp"
                     android:textStyle="bold" />
             </TableRow>
 
             <TableRow
+                style="@style/Widget.AppCompat.ButtonBar"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1">
 
                 <Button
                     android:id="@+id/b1"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="1"
+                    android:text="@string/one"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/b2"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="2"
+                    android:text="@string/two"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/b3"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="3"
+                    android:text="@string/three"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/bAdd"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="+"
+                    android:text="@string/plus"
                     android:textColor="@android:color/holo_blue_dark"
                     android:textSize="24sp"
                     android:textStyle="bold" />
             </TableRow>
 
             <TableRow
+                style="@style/Base.Widget.AppCompat.ButtonBar"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1">
 
                 <Button
                     android:id="@+id/bSwitch"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="+/-"
+                    android:text="@string/switch_sign"
                     android:textColor="@android:color/holo_blue_dark"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/b0"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="0"
+                    android:text="@string/zero"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/bDec"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
-                    android:text="."
+                    android:text="@string/decimal"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/bEq"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_background_equals"
-                    android:text="="
+                    android:text="@string/equals"
                     android:textColor="@android:color/white"
                     android:textSize="24sp"
                     android:textStyle="bold" />
