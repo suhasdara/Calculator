@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
             currNegFlag = false;
         }
 
-        if((currNegFlag && num.length() == DIGIT_LIMIT + 1) || (!currNegFlag && num.length() == DIGIT_LIMIT)) {
+        if((currNegFlag && num.length() >= DIGIT_LIMIT + 1) || (!currNegFlag && num.length() >= DIGIT_LIMIT)) {
             Toast.makeText(MainActivity.this, "Maximum number of digits reached (" + DIGIT_LIMIT + ")", Toast.LENGTH_LONG).show();
             return;
         }
@@ -228,18 +228,39 @@ public class MainActivity extends AppCompatActivity {
     private StringBuilder getNextToken() {
         StringBuilder result = new StringBuilder();
         int index = equation.length() - 2;
+        index = loopForGetNextToken(result, index);
+
+        if(index >= 1) {
+            char curr = equation.charAt(index);
+            char prev = equation.charAt(index - 1);
+            if((curr == '-' || curr == '+') && prev == 'E') {
+                result.insert(0, "" + prev + curr);
+                index -= 2;
+                index = loopForGetNextToken(result, index);
+            }
+        }
+
+        if(index >= 1 && equation.charAt(index) == '-' && equation.charAt(index - 1) == '(') {
+            result.insert(0, '-');
+            currNegFlag = true;
+            equation.append(')');
+            index -= 2;
+        }
+
+        if(index <= 0 && prevAnswer != null) {
+            answerSet = true;
+        }
+
+        return result;
+    }
+
+    private int loopForGetNextToken(StringBuilder result, int index) {
         while(index >= 0 && (Character.isDigit(equation.charAt(index)) || equation.charAt(index) == '.')) {
             result.insert(0, equation.charAt(index));
             index--;
         }
 
-        if(index >= 0 && equation.charAt(index) == '-') {
-            result.insert(0, '-');
-            currNegFlag = true;
-            equation.append(')');
-        }
-
-        return result;
+        return index;
     }
 
     private void clearLogic() {
@@ -465,7 +486,8 @@ public class MainActivity extends AppCompatActivity {
                     BigDecimal ans = getDisplayAnswer(prevAnswer);
 
                     String PA_Eq = prevAnswer.toPlainString();
-                    String PA_Disp = ans.toString();
+                    String PA_Disp = elimWeirdScientificNum(ans);
+
                     if(currNegFlag) {
                         PA_Eq = "(" + PA_Eq + ")";
                         PA_Disp = "(" + PA_Disp + ")";
@@ -514,12 +536,24 @@ public class MainActivity extends AppCompatActivity {
         prevAnswer = answer;
         lastOperation = evaluator.getLastOperation().replace('*', '×').replace('/', '÷');
         answer = getDisplayAnswer(answer);
-        String ans = answer.toString();
+        String ans = elimWeirdScientificNum(answer);
         num = new StringBuilder(ans);
 
         currNegFlag = num.charAt(0) == '-';
 
         tNum.setText(ans);
+    }
+
+    private String elimWeirdScientificNum(BigDecimal answer) {
+        String ans = answer.toString();
+        String[] tokens = ans.split("E");
+        if(tokens.length == 2) {
+            int scale = Integer.parseInt(tokens[1]);
+            if(scale >= 0 && scale < DIGIT_LIMIT) {
+                ans = answer.toPlainString();
+            }
+        }
+        return ans;
     }
 
     private void checkEndingDecimal() {
