@@ -1,7 +1,10 @@
 package com.suhasdara.calculator;
 
+import android.animation.Animator;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.res.ColorStateList;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -13,6 +16,8 @@ import android.widget.Toast;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class MainActivity extends AppCompatActivity {
     private Button b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, bDec;
@@ -21,14 +26,25 @@ public class MainActivity extends AppCompatActivity {
     private Button bC, bCE;
     private TextView tNum;
     private AutoResizeTextView tEqn;
+    private FloatingActionButton openMenu, mStore, mRecall, mAdd, mSub, mClear;
+    private TextView tStore, tRecall, tAdd, tSub, tClear;
+    private View fabBg;
 
     private StringBuilder num;
     private StringBuilder equation;
 
+    private boolean isFABOpen;
+
     private boolean currNegFlag;
+
     private boolean answerSet;
     private BigDecimal prevAnswer = null;
     private String lastOperation = "";
+
+    private BigDecimal memoryValue = null;
+    private boolean memoryRecalled;
+    private Queue<String> previouslyRecalled = new LinkedList<>();
+    private static final int BUFFER_SIZE = 50;
 
     private static final int DIGIT_LIMIT = 15;
     private static final int CHAR_LIMIT = 150;
@@ -68,6 +84,19 @@ public class MainActivity extends AppCompatActivity {
         tNum = findViewById(R.id.tNum);
         tEqn = findViewById(R.id.tEqn);
 
+        openMenu = findViewById(R.id.openMenu);
+        mStore = findViewById(R.id.mStore);
+        mRecall = findViewById(R.id.mRecall);
+        mAdd = findViewById(R.id.mAdd);
+        mSub = findViewById(R.id.mSub);
+        mClear = findViewById(R.id.mClear);
+        fabBg = findViewById(R.id.fabBGLayout);
+        tStore = findViewById(R.id.tStore);
+        tRecall = findViewById(R.id.tRecall);
+        tAdd = findViewById(R.id.tAdd);
+        tSub = findViewById(R.id.tSub);
+        tClear = findViewById(R.id.tClear);
+
         setTextCopy();
         setNumButtonClicks();
         setClearButtonClicks();
@@ -75,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
         setSwitchButtonClick();
         setParenButtonClicks();
         setEqualsClick();
+        setFabClicks();
     }
 
     private void setTextCopy() {
@@ -106,26 +136,26 @@ public class MainActivity extends AppCompatActivity {
     private void setNumButtonClicks() {
         b0.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if(!(num.length() == 1 && num.toString().equals("0"))){
-                    addDigit('0');
+                if(!(num.length() == 1 && num.toString().equals(String.valueOf(Constants.ZERO)))){
+                    addDigit(Constants.ZERO);
                 }
             }
         });
 
-        b1.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit('1'); } });
-        b2.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit('2'); } });
-        b3.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit('3'); } });
-        b4.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit('4'); } });
-        b5.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit('5'); } });
-        b6.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit('6'); } });
-        b7.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit('7'); } });
-        b8.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit('8'); } });
-        b9.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit('9'); } });
+        b1.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit(Constants.ONE); } });
+        b2.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit(Constants.TW0); } });
+        b3.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit(Constants.THREE); } });
+        b4.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit(Constants.FOUR); } });
+        b5.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit(Constants.FIVE); } });
+        b6.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit(Constants.SIX); } });
+        b7.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit(Constants.SEVEN); } });
+        b8.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit(Constants.EIGHT); } });
+        b9.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addDigit(Constants.NINE); } });
 
         bDec.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if(!num.toString().contains(".")) {
-                    addDigit('.');
+                if(!num.toString().contains(String.valueOf(Constants.DECIMAL))) {
+                    addDigit(Constants.DECIMAL);
                 } else {
                     Toast.makeText(MainActivity.this, "Invalid format provided: Two decimals", Toast.LENGTH_LONG).show();
                 }
@@ -140,6 +170,14 @@ public class MainActivity extends AppCompatActivity {
             answerSet = false;
             prevAnswer = null;
             currNegFlag = false;
+            memoryRecalled = false;
+        }
+
+        if(memoryRecalled) {
+            memoryRecalled = false;
+            equation.append(Constants.MULTIPLY);
+            currNegFlag = false;
+            num = new StringBuilder();
         }
 
         if((currNegFlag && num.length() >= DIGIT_LIMIT + 1) || (!currNegFlag && num.length() >= DIGIT_LIMIT)) {
@@ -161,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
                 equation.append(digit);
             } else {
                 num.append(digit);
-                equation.append("×");
+                equation.append(Constants.MULTIPLY);
                 equation.append(digit);
                 /*Toast.makeText(MainActivity.this, "Enter an operation before a digit after close parenthesis", Toast.LENGTH_LONG).show();*/
             }
@@ -195,13 +233,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void delLogic() {
         if(answerSet) {
-            answerSetClearLogic();
+            Toast.makeText(MainActivity.this, "Cannot modify answer. Use 'C' or 'CE' to clear", Toast.LENGTH_LONG).show();
+            return;
+        } else if(memoryRecalled) {
+            Toast.makeText(MainActivity.this, "Cannot modify recalled value. Use 'C' or 'CE' to clear", Toast.LENGTH_LONG).show();
             return;
         }
 
         if(num.length() != 0) {
             num.deleteCharAt(num.length() - 1);
-            if(num.length() == 1 && num.charAt(0) == '-') {
+            if(num.length() == 1 && Constants.isNeg(num.charAt(0))) {
                 num = new StringBuilder();
             }
         } else {
@@ -233,17 +274,17 @@ public class MainActivity extends AppCompatActivity {
         if(index >= 1) {
             char curr = equation.charAt(index);
             char prev = equation.charAt(index - 1);
-            if((curr == '-' || curr == '+') && prev == 'E') {
+            if((Constants.isNeg(curr) || curr == Constants.PLUS) && Constants.isExp(prev)) {
                 result.insert(0, "" + prev + curr);
                 index -= 2;
                 index = loopForGetNextToken(result, index);
             }
         }
 
-        if(index >= 1 && equation.charAt(index) == '-' && equation.charAt(index - 1) == '(') {
-            result.insert(0, '-');
+        if(index >= 1 && Constants.isNeg(equation.charAt(index)) && Constants.isOpenParen(equation.charAt(index - 1))) {
+            result.insert(0, Constants.MINUS);
             currNegFlag = true;
-            equation.append(')');
+            equation.append(Constants.CLOSE);
             index -= 2;
         }
 
@@ -251,11 +292,15 @@ public class MainActivity extends AppCompatActivity {
             answerSet = true;
         }
 
+        if(previouslyRecalled.contains(result.toString()) || previouslyRecalled.contains(result.toString())) {
+            memoryRecalled = true;
+        }
+
         return result;
     }
 
     private int loopForGetNextToken(StringBuilder result, int index) {
-        while(index >= 0 && (Character.isDigit(equation.charAt(index)) || equation.charAt(index) == '.')) {
+        while(index >= 0 && (Constants.isDigit(equation.charAt(index)) || Constants.isDecimal(equation.charAt(index)))) {
             result.insert(0, equation.charAt(index));
             index--;
         }
@@ -277,6 +322,7 @@ public class MainActivity extends AppCompatActivity {
             equation.delete(equation.length() - num.length(), equation.length());
         }
         num = new StringBuilder();
+        memoryRecalled = false;
         setTextFields();
     }
 
@@ -285,23 +331,24 @@ public class MainActivity extends AppCompatActivity {
         num = new StringBuilder();
         setTextFields();
         answerSet = false;
+        memoryRecalled = false;
         prevAnswer = null;
         currNegFlag = false;
     }
 
     private void setOpnButtonClicks() {
-        bMul.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addOperator('×'); } });
-        bDiv.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addOperator('÷'); } });
-        bAdd.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addOperator('+'); } });
-        bSub.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addOperator('-'); } });
+        bMul.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addOperator(Constants.MULTIPLY); } });
+        bDiv.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addOperator(Constants.DIVIDE); } });
+        bAdd.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addOperator(Constants.PLUS); } });
+        bSub.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { addOperator(Constants.MINUS); } });
     }
 
     private void addOperator(char operator) {
         if(answerSet) {
             equation = new StringBuilder(num);
             if(currNegFlag) {
-                equation.insert(0, '(');
-                equation.append(')');
+                equation.insert(0, Constants.OPEN);
+                equation.append(Constants.CLOSE);
                 currNegFlag = false;
             }
             equation.append(operator);
@@ -312,6 +359,8 @@ public class MainActivity extends AppCompatActivity {
             answerSet = false;
             return;
         }
+
+        memoryRecalled = false;
 
         if(equationLimitReached()) {
             Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
@@ -324,7 +373,7 @@ public class MainActivity extends AppCompatActivity {
 
         boolean wasEmpty = false;
         if(equation.length() == 0) {
-            equation.append("0");
+            equation.append(Constants.ZERO);
             wasEmpty = true;
         }
 
@@ -358,10 +407,10 @@ public class MainActivity extends AppCompatActivity {
                         currNegFlag = false;
                         prevAnswer = prevAnswer.negate();
                     } else {
-                        num.insert(0, "-");
+                        num.insert(0, Constants.MINUS);
                         equation = new StringBuilder(num);
-                        equation.insert(0, '(');
-                        equation.append(')');
+                        equation.insert(0, Constants.OPEN);
+                        equation.append(Constants.CLOSE);
                         currNegFlag = true;
                         prevAnswer = prevAnswer.negate();
                     }
@@ -383,10 +432,10 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         currNegFlag = true;
                         equation.delete(equation.length() - num.length(), equation.length());
-                        num.insert(0, "-");
-                        equation.append("(");
+                        num.insert(0, Constants.MINUS);
+                        equation.append(Constants.OPEN);
                         equation.append(num);
-                        equation.append(")");
+                        equation.append(Constants.CLOSE);
                     }
                     setTextFields();
                 }
@@ -405,6 +454,8 @@ public class MainActivity extends AppCompatActivity {
                     prevAnswer = null;
                     currNegFlag = false;
                 }
+
+                memoryRecalled = false;
 
                 if(equationLimitReached()) {
                     Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
@@ -436,20 +487,22 @@ public class MainActivity extends AppCompatActivity {
                     currNegFlag = false;
                 }
 
+                memoryRecalled = false;
+
                 if(equationLimitReached()) {
                     Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
                     return;
                 }
 
                 int[] parenCounts = countsParens(equation.toString().toCharArray());
-                boolean expressionEmpty = endsWithOpenParen(equation.toString());
                 boolean fulfilled = parenCounts[0] == parenCounts[1];
+                boolean expressionEmpty = endsWithOpenParen(equation.toString());
 
                 if(!endsWithOperation(equation.toString()) && !expressionEmpty && !fulfilled) {
                     checkEndingDecimal();
                     num = new StringBuilder();
                     currNegFlag = false;
-                    equation.append(")");
+                    equation.append(Constants.CLOSE);
                     setTextFields();
                 }
 
@@ -469,10 +522,9 @@ public class MainActivity extends AppCompatActivity {
         currNegFlag = false;
         num = new StringBuilder();
         if(addMult) {
-            equation.append("×(");
-        } else {
-            equation.append("(");
+            equation.append(Constants.MULTIPLY);
         }
+        equation.append(Constants.OPEN);
         setTextFields();
     }
 
@@ -480,6 +532,8 @@ public class MainActivity extends AppCompatActivity {
         bEq.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                memoryRecalled = false;
+
                 String equat = equation.toString();
 
                 if(answerSet) {
@@ -489,8 +543,8 @@ public class MainActivity extends AppCompatActivity {
                     String PA_Disp = elimWeirdScientificNum(ans);
 
                     if(currNegFlag) {
-                        PA_Eq = "(" + PA_Eq + ")";
-                        PA_Disp = "(" + PA_Disp + ")";
+                        PA_Eq = "" + Constants.OPEN + PA_Eq + Constants.CLOSE;
+                        PA_Disp = "" + Constants.OPEN + PA_Disp + Constants.CLOSE;
                     }
 
                     String eqn = PA_Eq + lastOperation;
@@ -498,7 +552,7 @@ public class MainActivity extends AppCompatActivity {
 
                     equation = new StringBuilder(eqDisp);
 
-                    eqn = eqn.replace('×', '*').replace('÷', '/');
+                    eqn = eqn.replace(Constants.MULTIPLY, Constants.MULT).replace(Constants.DIVIDE, Constants.DIV);
                     ExpressionEvaluator evaluator = new ExpressionEvaluator(prevAnswer);
                     BigDecimal answer = evaluator.evaluate(eqn);
                     afterEvaluation(answer, evaluator);
@@ -510,7 +564,7 @@ public class MainActivity extends AppCompatActivity {
                 if(!equationValid(equat)) {
                     Toast.makeText(MainActivity.this, "Equation is invalid", Toast.LENGTH_LONG).show();
                 } else {
-                    String eqn = equat.replace('×', '*').replace('÷', '/');
+                    String eqn = equat.replace(Constants.MULTIPLY, Constants.MULT).replace(Constants.DIVIDE, Constants.DIV);
                     if(eqn.length() == 0) {
                         return;
                     }
@@ -534,31 +588,212 @@ public class MainActivity extends AppCompatActivity {
     private void afterEvaluation(BigDecimal answer, ExpressionEvaluator evaluator) {
         answerSet = true;
         prevAnswer = answer;
-        lastOperation = evaluator.getLastOperation().replace('*', '×').replace('/', '÷');
+        lastOperation = evaluator.getLastOperation().replace(Constants.MULT, Constants.MULTIPLY).replace(Constants.DIV, Constants.DIVIDE);
         answer = getDisplayAnswer(answer);
         String ans = elimWeirdScientificNum(answer);
         num = new StringBuilder(ans);
 
-        currNegFlag = num.charAt(0) == '-';
+        currNegFlag = Constants.isNeg(num.charAt(0));
 
         tNum.setText(ans);
     }
 
-    private String elimWeirdScientificNum(BigDecimal answer) {
-        String ans = answer.toString();
-        String[] tokens = ans.split("E");
-        if(tokens.length == 2) {
-            int scale = Integer.parseInt(tokens[1]);
-            if(scale >= 0 && scale < DIGIT_LIMIT) {
-                ans = answer.toPlainString();
+    private void setFabClicks() {
+        openMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(!isFABOpen) {
+                    openFABMenu();
+                } else {
+                    closeFABMenu();
+                }
             }
+        });
+
+        fabBg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                closeFABMenu();
+            }
+        });
+
+        mStore.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                memoryStoreLogic(true);
+                closeFABMenu();
+            }
+        });
+
+        mRecall.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                memoryRecallLogic();
+                closeFABMenu();
+            }
+        });
+
+        mClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                memoryValue = null;
+                Toast.makeText(MainActivity.this, "Cleared memory", Toast.LENGTH_LONG).show();
+                closeFABMenu();
+            }
+        });
+
+        mAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(num.length() != 0) {
+                    if(memoryValue == null) {
+                        memoryStoreLogic(true);
+                    } else {
+                        BigDecimal toAdd = new BigDecimal(num.toString());
+                        memoryValue = memoryValue.add(toAdd);
+                        addToPreviouslyRecalled();
+                        Toast.makeText(MainActivity.this, "Current value added to memory", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "ERROR: Value field is empty", Toast.LENGTH_LONG).show();
+                }
+                closeFABMenu();
+            }
+        });
+
+        mSub.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(num.length() != 0) {
+                    if(memoryValue == null) {
+                        memoryStoreLogic(false);
+                    } else {
+                        BigDecimal toSub = new BigDecimal(num.toString());
+                        memoryValue = memoryValue.subtract(toSub);
+                        addToPreviouslyRecalled();
+                        Toast.makeText(MainActivity.this, "Current value subtracted from memory", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "ERROR: Value field is empty", Toast.LENGTH_LONG).show();
+                }
+                closeFABMenu();
+            }
+        });
+    }
+
+    private void openFABMenu(){
+        isFABOpen = true;
+        mStore.show(); tStore.setVisibility(View.VISIBLE);
+        mRecall.show(); tRecall.setVisibility(View.VISIBLE);
+        mAdd.show(); tAdd.setVisibility(View.VISIBLE);
+        mSub.show(); tSub.setVisibility(View.VISIBLE);
+        mClear.show(); tClear.setVisibility(View.VISIBLE);
+        fabBg.setVisibility(View.VISIBLE);
+
+        openMenu.animate().rotationBy(135);
+        openMenu.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorAccent)));
+        mStore.animate().translationX(getResources().getDimension(R.dimen.standard_60));
+        mRecall.animate().translationX(getResources().getDimension(R.dimen.standard_120));
+        mAdd.animate().translationX(getResources().getDimension(R.dimen.standard_180));
+        mSub.animate().translationX(getResources().getDimension(R.dimen.standard_240));
+        mClear.animate().translationX(getResources().getDimension(R.dimen.standard_300));
+    }
+
+    private void closeFABMenu(){
+        isFABOpen = false;
+        fabBg.setVisibility(View.GONE);
+        openMenu.animate().rotationBy(-135);
+        openMenu.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_orange_light)));
+
+        mStore.animate().translationX(0);
+        mRecall.animate().translationX(0);
+        mAdd.animate().translationX(0);
+        mSub.animate().translationX(0);
+        mClear.animate().translationX(0).setListener(new Animator.AnimatorListener() {
+            public void onAnimationStart(Animator animator) {}
+            public void onAnimationCancel(Animator animator) {}
+            public void onAnimationRepeat(Animator animator) {}
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+                if(!isFABOpen) {
+                    mStore.hide(); tStore.setVisibility(View.GONE);
+                    mRecall.hide(); tRecall.setVisibility(View.GONE);
+                    mAdd.hide(); tAdd.setVisibility(View.GONE);
+                    mSub.hide(); tSub.setVisibility(View.GONE);
+                    mClear.hide(); tClear.setVisibility(View.GONE);
+                    openMenu.setRotation(0);
+                    openMenu.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_orange_light)));
+                } else {
+                    openMenu.setRotation(135);
+                    openMenu.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorAccent)));
+                }
+            }
+        });
+    }
+
+    private void memoryStoreLogic(boolean positive) {
+        if(answerSet) {
+            memoryValue = prevAnswer;
+            addToPreviouslyRecalled();
+        } else {
+            if(num.length() == 0) {
+                Toast.makeText(MainActivity.this, "ERROR: Value field is empty", Toast.LENGTH_LONG).show();
+                closeFABMenu();
+                return;
+            }
+
+            if(positive) {
+                memoryValue = new BigDecimal(num.toString());
+            } else {
+                memoryValue = new BigDecimal(num.toString()).negate();
+            }
+            addToPreviouslyRecalled();
         }
-        return ans;
+        Toast.makeText(MainActivity.this, "Saved current value to memory", Toast.LENGTH_LONG).show();
+    }
+
+    private void memoryRecallLogic() {
+        if(memoryValue != null) {
+            BigDecimal toSet = getDisplayAnswer(memoryValue);
+            String dispVal = elimWeirdScientificNum(toSet);
+
+            if(answerSet) {
+                answerSetClearLogic();
+                num = new StringBuilder(dispVal);
+                equation = new StringBuilder(dispVal);
+                if(toSet.compareTo(BigDecimal.ZERO) < 0) {
+                    equation.insert(0, Constants.OPEN);
+                    equation.append(Constants.CLOSE);
+                    currNegFlag = true;
+                }
+            } else {
+                if(currNegFlag) {
+                    int start = equation.length() - (num.length() + 2);
+                    equation.delete(start, equation.length());
+                    currNegFlag = false;
+                } else {
+                    equation.delete(equation.length() - num.length(), equation.length());
+                }
+
+                equation.append(dispVal);
+                if(toSet.compareTo(BigDecimal.ZERO) < 0) {
+                    equation.insert(0, Constants.OPEN);
+                    equation.append(Constants.CLOSE);
+                    currNegFlag = true;
+                }
+                num = new StringBuilder(dispVal);
+            }
+            setTextFields();
+            memoryRecalled = true;
+        } else {
+            Toast.makeText(MainActivity.this, "No value stored in memory", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void checkEndingDecimal() {
-        if(num.length() != 0 && num.charAt(num.length() - 1) == '.') {
-            addDigit('0');
+        if(num.length() != 0 && Constants.isDecimal(num.charAt(num.length() - 1))) {
+            addDigit(Constants.ZERO);
         }
     }
 
@@ -567,25 +802,24 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        char lastChar = s.charAt(s.length() - 1);
-        return lastChar == '×' || lastChar == '-' || lastChar == '+' || lastChar == '÷';
+        return Constants.isOperator(s.charAt(s.length() - 1));
     }
 
     private boolean endsWithOpenParen(String s) {
-        return s.length() != 0 && s.charAt(s.length() - 1) == '(';
+        return s.length() != 0 && Constants.isOpenParen(s.charAt(s.length() - 1));
     }
 
     private boolean endsWithCloseParen(String s) {
-        return s.length() != 0 && s.charAt(s.length() - 1) == ')';
+        return s.length() != 0 && Constants.isCloseParen(s.charAt(s.length() - 1));
     }
 
     private int[] countsParens(char exp[]) {
         int[] counts = new int[2];
 
         for(char c : exp) {
-            if (c == '(') {
+            if (Constants.isOpenParen(c)) {
                 counts[0]++;
-            } else if (c == ')') {
+            } else if (Constants.isCloseParen(c)) {
                 counts[1]++;
             }
         }
@@ -609,6 +843,30 @@ public class MainActivity extends AppCompatActivity {
         return new BigDecimal(answer.toPlainString(), MC).stripTrailingZeros();
     }
 
+    private String elimWeirdScientificNum(BigDecimal answer) {
+        String ans = answer.toString();
+        String[] tokens = ans.split(String.valueOf(Constants.EXP));
+        if(tokens.length == 2) {
+            int scale = Integer.parseInt(tokens[1]);
+            if(scale >= 0 && scale < DIGIT_LIMIT) {
+                ans = answer.toPlainString();
+            }
+        }
+        return ans;
+    }
+
+    private void addToPreviouslyRecalled() {
+        BigDecimal val = getDisplayAnswer(memoryValue);
+        String valStr = elimWeirdScientificNum(val);
+        String valStrNeg = elimWeirdScientificNum(val);
+
+        previouslyRecalled.add(valStr);
+        previouslyRecalled.add(valStrNeg);
+        while(previouslyRecalled.size() > BUFFER_SIZE) {
+            previouslyRecalled.remove();
+        }
+    }
+
     private void setTextFields() {
         String eqn = equation.toString();
 
@@ -621,6 +879,16 @@ public class MainActivity extends AppCompatActivity {
         } else {
             tEqn.setBackgroundColor(getResources().getColor(R.color.very_light_red));
             tEqn.setTextColor(getResources().getColor(android.R.color.black));
+        }
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        if(isFABOpen) {
+            closeFABMenu();
+        } else {
+            super.onBackPressed();
         }
     }
 }

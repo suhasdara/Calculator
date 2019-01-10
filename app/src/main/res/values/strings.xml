@@ -22,4 +22,9 @@
     <string name="seven">7</string>
     <string name="eight">8</string>
     <string name="nine">9</string>
+    <string name="mem_store">MS</string>
+    <string name="mem_recall">MR</string>
+    <string name="mem_clear">MC</string>
+    <string name="mem_plus">M+</string>
+    <string name="mem_minus">M-</string>
 </resources>

@@ -43,16 +43,16 @@ class ExpressionEvaluator {
                 continue;
             }
 
-            if ((tokens[i] >= '0' && tokens[i] <= '9') || tokens[i] == '.') {
+            if (Constants.isDigit(tokens[i]) || Constants.isDecimal(tokens[i])) {
                 StringBuilder buffer = new StringBuilder();
 
                 if(negSet) {
-                    buffer.append('-');
+                    buffer.append(Constants.MINUS);
                     negSet = false;
                 }
 
-                while (i < tokens.length && ((tokens[i] >= '0' && tokens[i] <= '9') || tokens[i] == '.' || tokens[i] == 'E')) {
-                    if(tokens[i] == 'E') {
+                while (i < tokens.length && (Constants.isDigit(tokens[i]) || Constants.isDecimal(tokens[i]) || Constants.isExp(tokens[i]))) {
+                    if(Constants.isExp(tokens[i])) {
                         buffer.append(tokens[i++]);
                     }
                     buffer.append(tokens[i++]);
@@ -67,14 +67,14 @@ class ExpressionEvaluator {
             }
 
             // Current token is an opening brace, push it to 'ops'
-            else if (tokens[i] == '(') {
+            else if (Constants.isOpenParen(tokens[i])) {
                 ops.push(tokens[i]);
             }
 
             // Closing brace encountered, solve entire brace
-            else if (tokens[i] == ')') {
+            else if (Constants.isCloseParen(tokens[i])) {
                 if(!ignoreOneCloseParen) {
-                    while (ops.peek() != '(') {
+                    while (!Constants.isOpenParen(ops.peek())) {
                         BigDecimal res = calculateOnce(values, ops);
                         if(res.equals(ERROR_BIGDEC)) {
                             return ERROR_BIGDEC;
@@ -90,8 +90,8 @@ class ExpressionEvaluator {
             }
 
             // Current token is an operator.
-            else if (tokens[i] == '+' || tokens[i] == '-' || tokens[i] == '*' || tokens[i] == '/') {
-                if(previousChar == '(' && tokens[i] == '-') {
+            else if (Constants.isOperator(tokens[i])) {
+                if(Constants.isOpenParen(previousChar) && Constants.isNeg(tokens[i])) {
                     ops.pop();
                     ignoreOneCloseParen = true;
                     negSet = true;
@@ -149,7 +149,7 @@ class ExpressionEvaluator {
 
         if(ops.isEmpty()) {
             if(b.compareTo(BigDecimal.ZERO) < 0) {
-                lastOp = "" + op + "(" + b.toPlainString() + ")";
+                lastOp = "" + op + Constants.OPEN + b.toPlainString() + Constants.CLOSE;
             } else {
                 lastOp = "" + op + b.toPlainString();
             }
@@ -161,24 +161,24 @@ class ExpressionEvaluator {
     // Returns true if 'op2' has higher or same precedence as 'op1',
     // otherwise returns false.
     private boolean hasPrecedence(char op1, char op2) {
-        if (op2 == '(' || op2 == ')') {
+        if (Constants.isParen(op2)) {
             return false;
         }
 
-        return !((op1 == '*' || op1 == '/') && (op2 == '+' || op2 == '-'));
+        return !((op1 == Constants.MULT || op1 == Constants.DIV) && (op2 == Constants.PLUS || Constants.isNeg(op2)));
     }
 
     // A utility method to apply an operator 'op' on operands 'a'
     // and 'b'. Return the result.
     private BigDecimal applyOp(char op, BigDecimal b, BigDecimal a) {
         switch (op) {
-            case '+':
+            case Constants.PLUS:
                 return a.add(b);
-            case '-':
+            case Constants.MINUS:
                 return a.subtract(b);
-            case '*':
+            case Constants.MULT:
                 return a.multiply(b);
-            case '/':
+            case Constants.DIV:
                 if (b.equals(BigDecimal.ZERO)) {
                     return new BigDecimal(ERROR_CONSTANT);
                 }
