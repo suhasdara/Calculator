@@ -9,11 +9,11 @@
     <dimen name="standard_12">12dp</dimen>
     <dimen name="standard_21">21dp</dimen>
     <dimen name="standard_23">23dp</dimen>
+    <dimen name="standard_35">35dp</dimen>
     <dimen name="standard_45">45dp</dimen>
-    <dimen name="standard_55">55dp</dimen>
-    <dimen name="standard_60">60dp</dimen>
-    <dimen name="standard_120">120dp</dimen>
-    <dimen name="standard_180">180dp</dimen>
-    <dimen name="standard_240">240dp</dimen>
-    <dimen name="standard_300">300dp</dimen>
+    <dimen name="standard_50">50dp</dimen>
+    <dimen name="standard_95">95dp</dimen>
+    <dimen name="standard_140">140dp</dimen>
+    <dimen name="standard_185">185dp</dimen>
+    <dimen name="standard_230">230dp</dimen>
 </resources>

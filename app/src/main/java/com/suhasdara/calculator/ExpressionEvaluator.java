@@ -179,7 +179,7 @@ class ExpressionEvaluator {
             case Constants.MULT:
                 return a.multiply(b);
             case Constants.DIV:
-                if (b.equals(BigDecimal.ZERO)) {
+                if (b.compareTo(BigDecimal.ZERO) == 0) {
                     return new BigDecimal(ERROR_CONSTANT);
                 }
                 return a.divide(b, MC_DIV);

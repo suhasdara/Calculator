@@ -350,8 +350,8 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/mClear"
-        android:layout_width="@dimen/standard_45"
-        android:layout_height="@dimen/standard_45"
+        android:layout_width="@dimen/standard_35"
+        android:layout_height="@dimen/standard_35"
         android:layout_margin="@dimen/standard_21"
         app:backgroundTint="@android:color/holo_orange_light" />
 
@@ -362,14 +362,15 @@
         android:text="@string/mem_clear"
         android:elevation="6dp"
         android:textSize="18sp"
+        android:textStyle="bold"
         android:textColor="#fff"
         app:layout_anchor="@id/mClear"
         app:layout_anchorGravity="center"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/mSub"
-        android:layout_width="@dimen/standard_45"
-        android:layout_height="@dimen/standard_45"
+        android:layout_width="@dimen/standard_35"
+        android:layout_height="@dimen/standard_35"
         android:layout_margin="@dimen/standard_21"
         app:backgroundTint="@android:color/holo_orange_light" />
 
@@ -380,14 +381,15 @@
         android:text="@string/mem_minus"
         android:elevation="6dp"
         android:textSize="18sp"
+        android:textStyle="bold"
         android:textColor="#fff"
         app:layout_anchor="@id/mSub"
         app:layout_anchorGravity="center"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/mAdd"
-        android:layout_width="@dimen/standard_45"
-        android:layout_height="@dimen/standard_45"
+        android:layout_width="@dimen/standard_35"
+        android:layout_height="@dimen/standard_35"
         android:layout_margin="@dimen/standard_21"
         app:backgroundTint="@android:color/holo_orange_light" />
 
@@ -398,14 +400,15 @@
         android:text="@string/mem_plus"
         android:elevation="6dp"
         android:textSize="18sp"
+        android:textStyle="bold"
         android:textColor="#fff"
         app:layout_anchor="@id/mAdd"
         app:layout_anchorGravity="center"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/mRecall"
-        android:layout_width="@dimen/standard_45"
-        android:layout_height="@dimen/standard_45"
+        android:layout_width="@dimen/standard_35"
+        android:layout_height="@dimen/standard_35"
         android:layout_margin="@dimen/standard_21"
         app:backgroundTint="@android:color/holo_orange_light" />
 
@@ -416,14 +419,15 @@
         android:text="@string/mem_recall"
         android:elevation="6dp"
         android:textSize="18sp"
+        android:textStyle="bold"
         android:textColor="#fff"
         app:layout_anchor="@id/mRecall"
         app:layout_anchorGravity="center"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/mStore"
-        android:layout_width="@dimen/standard_45"
-        android:layout_height="@dimen/standard_45"
+        android:layout_width="@dimen/standard_35"
+        android:layout_height="@dimen/standard_35"
         android:layout_margin="@dimen/standard_21"
         app:backgroundTint="@android:color/holo_orange_light" />
 
@@ -434,17 +438,18 @@
         android:text="@string/mem_store"
         android:elevation="6dp"
         android:textSize="18sp"
+        android:textStyle="bold"
         android:textColor="#fff"
         app:layout_anchor="@id/mStore"
         app:layout_anchorGravity="center"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/openMenu"
-        android:layout_width="@dimen/standard_55"
-        android:layout_height="@dimen/standard_55"
+        android:layout_width="@dimen/standard_45"
+        android:layout_height="@dimen/standard_45"
         android:layout_margin="@dimen/fab_margin"
         android:src="@android:drawable/ic_input_add"
         android:tint="@android:color/background_light"
         app:backgroundTint="@android:color/holo_orange_light"
-        app:fabSize="normal" />
+        app:fabCustomSize="@dimen/standard_45" />
 </android.support.design.widget.CoordinatorLayout>
