@@ -4,9 +4,13 @@ import android.animation.Animator;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -25,8 +29,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView tNum;
     private AutoResizeTextView tEqn;
     private FloatingActionButton openMenu, mStore, mRecall, mAdd, mSub, mClear;
-    private TextView tStore, tRecall, tAdd, tSub, tClear;
+    private TextView memory_notif, tStore, tRecall, tAdd, tSub, tClear;
     private View fabBg;
+
+    private Toast currToast = null;
 
     private StringBuilder num;
     private StringBuilder equation;
@@ -91,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         mSub = findViewById(R.id.mSub);
         mClear = findViewById(R.id.mClear);
         fabBg = findViewById(R.id.fabBGLayout);
+        memory_notif = findViewById(R.id.mem_notification);
         tStore = findViewById(R.id.tStore);
         tRecall = findViewById(R.id.tRecall);
         tAdd = findViewById(R.id.tAdd);
@@ -111,24 +118,32 @@ public class MainActivity extends AppCompatActivity {
         tNum.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("number", num.toString());
-                clipboard.setPrimaryClip(clip);
+                cancelToast();
+                if(num.length() > 0) {
+                    ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("number", num.toString());
+                    clipboard.setPrimaryClip(clip);
 
-                Toast.makeText(MainActivity.this, "Value copied to clipboard", Toast.LENGTH_LONG).show();
-                return true;
+                    showToast("Value copied to clipboard");
+                    return true;
+                }
+                return false;
             }
         });
 
         tEqn.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("equation", num.toString());
-                clipboard.setPrimaryClip(clip);
+                cancelToast();
+                if(equation.length() > 0) {
+                    ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("equation", num.toString());
+                    clipboard.setPrimaryClip(clip);
 
-                Toast.makeText(MainActivity.this, "Equation copied to clipboard", Toast.LENGTH_LONG).show();
-                return true;
+                    showToast("Equation copied to clipboard");
+                    return true;
+                }
+                return false;
             }
         });
     }
@@ -136,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
     private void setNumButtonClicks() {
         b0.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                cancelToast();
                 if(!(num.length() == 1 && num.toString().equals(String.valueOf(Constants.ZERO)))){
                     addDigit(Constants.ZERO);
                 }
@@ -154,19 +170,26 @@ public class MainActivity extends AppCompatActivity {
 
         bDec.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if(!num.toString().contains(String.valueOf(Constants.DECIMAL))) {
-                    if(num.length() == 0) {
-                        addDigit(Constants.ZERO);
-                    }
+                if(answerSet) {
+                    addDigit(Constants.ZERO);
                     addDigit(Constants.DECIMAL);
                 } else {
-                    Toast.makeText(MainActivity.this, "Invalid format provided: Two decimals", Toast.LENGTH_LONG).show();
+                    if(!num.toString().contains(String.valueOf(Constants.DECIMAL))) {
+                        if(num.length() == 0) {
+                            addDigit(Constants.ZERO);
+                        }
+                        addDigit(Constants.DECIMAL);
+                    } else {
+                        showToast("Invalid format provided: Two decimals");
+                    }
                 }
             }
         });
     }
 
     private void addDigit(char digit) {
+        cancelToast();
+
         if(answerSet) {
             equation = new StringBuilder();
             num = new StringBuilder();
@@ -195,12 +218,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if((currNegFlag && num.length() >= DIGIT_LIMIT + 1) || (!currNegFlag && num.length() >= DIGIT_LIMIT)) {
-            Toast.makeText(MainActivity.this, "Maximum number of digits reached (" + DIGIT_LIMIT + ")", Toast.LENGTH_LONG).show();
+            showToast("Maximum number of digits reached (" + DIGIT_LIMIT + ")");
             return;
         }
 
         if(equationLimitReached()) {
-            Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
+            showToast("Maximum number of characters exceeded (" + CHAR_LIMIT + ")");
             return;
         }
 
@@ -215,7 +238,6 @@ public class MainActivity extends AppCompatActivity {
                 num.append(digit);
                 equation.append(Constants.MULTIPLY);
                 equation.append(digit);
-                /*Toast.makeText(MainActivity.this, "Enter an operation before a digit after close parenthesis", Toast.LENGTH_LONG).show();*/
             }
         }
 
@@ -246,14 +268,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void delLogic() {
+        cancelToast();
+
         if(answerSet) {
-            Toast.makeText(MainActivity.this, "Cannot modify answer. Use 'C' or 'CE' to clear", Toast.LENGTH_LONG).show();
+            showToast("Cannot modify answer. Use 'C' or 'CE' to clear");
             return;
         } else if(memoryRecalled) {
-            Toast.makeText(MainActivity.this, "Cannot modify recalled value. Use 'C' or 'CE' to clear", Toast.LENGTH_LONG).show();
+            showToast("Cannot modify recalled value. Use 'C' or 'CE' to clear");
             return;
         } else if(num.toString().contains(String.valueOf(Constants.EXP))) {
-            Toast.makeText(MainActivity.this, "Cannot modify value containing Exp (E). Use 'C' or 'CE' to clear", Toast.LENGTH_LONG).show();
+            showToast("Cannot modify value containing Exp (E). Use 'C' or 'CE' to clear");
             return;
         }
 
@@ -331,6 +355,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void clearLogic() {
+        cancelToast();
+
         if(answerSet) {
             answerSetClearLogic();
             return;
@@ -349,6 +375,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void answerSetClearLogic() {
+        cancelToast();
+
         equation = new StringBuilder();
         num = new StringBuilder();
         answerSet = false;
@@ -366,6 +394,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addOperator(char operator) {
+        cancelToast();
+        
         if(answerSet) {
             equation = new StringBuilder(num);
             if(currNegFlag) {
@@ -386,7 +416,7 @@ public class MainActivity extends AppCompatActivity {
         memoryRecalled = false;
 
         if(equationLimitReached()) {
-            Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
+            showToast("Maximum number of characters exceeded (" + CHAR_LIMIT + ")");
             return;
         }
 
@@ -401,7 +431,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if(endsWithOpenParen(equation.toString())) {
-            Toast.makeText(MainActivity.this, "Enter a digit before an operation after open parenthesis", Toast.LENGTH_LONG).show();
+            showToast("Enter a digit before an operation after open parenthesis");
             if(wasEmpty) {
                 equation = new StringBuilder();
             }
@@ -423,6 +453,8 @@ public class MainActivity extends AppCompatActivity {
         bSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                cancelToast();
+                
                 if(answerSet) {
                     if(currNegFlag) {
                         num.deleteCharAt(0);
@@ -442,7 +474,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if(equationLimitReached()) {
-                    Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
+                    showToast("Maximum number of characters exceeded (" + CHAR_LIMIT + ")");
                     return;
                 }
 
@@ -470,6 +502,8 @@ public class MainActivity extends AppCompatActivity {
         bOpen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                cancelToast();
+                
                 if(answerSet) {
                     equation = new StringBuilder();
                     num = new StringBuilder();
@@ -481,7 +515,7 @@ public class MainActivity extends AppCompatActivity {
                 memoryRecalled = false;
 
                 if(equationLimitReached()) {
-                    Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
+                    showToast("Maximum number of characters exceeded (" + CHAR_LIMIT + ")");
                     return;
                 }
 
@@ -493,7 +527,6 @@ public class MainActivity extends AppCompatActivity {
                         openParenLogic(false);
                     } else {
                         openParenLogic(true);
-                        /*Toast.makeText(MainActivity.this, "Equation currently ends on a non-operation symbol", Toast.LENGTH_LONG).show();*/
                     }
                 }
             }
@@ -502,6 +535,8 @@ public class MainActivity extends AppCompatActivity {
         bClose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                cancelToast();
+                
                 if(answerSet) {
                     equation = new StringBuilder();
                     num = new StringBuilder();
@@ -513,7 +548,7 @@ public class MainActivity extends AppCompatActivity {
                 memoryRecalled = false;
 
                 if(equationLimitReached()) {
-                    Toast.makeText(MainActivity.this, "Maximum number of characters exceeded (" + CHAR_LIMIT + ")", Toast.LENGTH_LONG).show();
+                    showToast("Maximum number of characters exceeded (" + CHAR_LIMIT + ")");
                     return;
                 }
 
@@ -530,11 +565,11 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if(endsWithOperation(equation.toString())) {
-                    Toast.makeText(MainActivity.this, "Equation currently ends on an operation", Toast.LENGTH_LONG).show();
+                    showToast("Equation currently ends on an operation");
                 } else if(expressionEmpty) {
-                    Toast.makeText(MainActivity.this, "Parenthesis expression is empty", Toast.LENGTH_LONG).show();
+                    showToast("Parenthesis expression is empty");
                 } else if(fulfilled) {
-                    Toast.makeText(MainActivity.this, "Could not find matching open parenthesis", Toast.LENGTH_LONG).show();
+                    showToast("Could not find matching open parenthesis");
                 }
             }
         });
@@ -555,6 +590,7 @@ public class MainActivity extends AppCompatActivity {
         bEq.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                cancelToast();
                 memoryRecalled = false;
 
                 if(answerSet) {
@@ -588,7 +624,7 @@ public class MainActivity extends AppCompatActivity {
                 String equat = equation.toString();
 
                 if(!equationValid(equat)) {
-                    Toast.makeText(MainActivity.this, "Equation is invalid", Toast.LENGTH_LONG).show();
+                    showToast("Equation is invalid");
                 } else {
                     String eqn = equat.replace(Constants.MULTIPLY, Constants.MULT).replace(Constants.DIVIDE, Constants.DIV);
                     if(eqn.length() == 0) {
@@ -600,8 +636,8 @@ public class MainActivity extends AppCompatActivity {
 
                     if(answer.equals(ExpressionEvaluator.ERROR_BIGDEC)) {
                         num = new StringBuilder();
-                        tNum.setText(ERROR_STRING);
-                        Toast.makeText(MainActivity.this, "ERROR: Calculation involves division by zero", Toast.LENGTH_LONG).show();
+                        tNum.setText(getFormattedString(new StringBuilder(ERROR_STRING), true));
+                        showToast("ERROR: Calculation involves division by zero");
                         return;
                     }
 
@@ -621,8 +657,8 @@ public class MainActivity extends AppCompatActivity {
 
         currNegFlag = Constants.isNeg(num.charAt(0));
 
-        String disp = ANSWER_HEAD + ans;
-        tNum.setText(disp);
+        StringBuilder disp = new StringBuilder(ANSWER_HEAD + ans);
+        tNum.setText(getFormattedString(disp, false));
     }
 
     private void setFabClicks() {
@@ -648,7 +684,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 memoryStoreLogic(true);
-                closeFABMenu();
             }
         });
 
@@ -656,7 +691,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 memoryRecallLogic();
-                closeFABMenu();
             }
         });
 
@@ -664,8 +698,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 memoryValue = null;
-                Toast.makeText(MainActivity.this, "Cleared memory", Toast.LENGTH_LONG).show();
-                closeFABMenu();
+                memory_notif.setVisibility(View.GONE);
+                showToast("Cleared memory");
             }
         });
 
@@ -678,12 +712,11 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         BigDecimal toAdd = new BigDecimal(num.toString());
                         memoryValue = memoryValue.add(toAdd);
-                        Toast.makeText(MainActivity.this, "Current value added to memory", Toast.LENGTH_LONG).show();
+                        showToast("Current value added to memory");
                     }
                 } else {
-                    Toast.makeText(MainActivity.this, "ERROR: Value field is empty", Toast.LENGTH_LONG).show();
+                    showToast("ERROR: Value field is empty");
                 }
-                closeFABMenu();
             }
         });
 
@@ -696,45 +729,57 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         BigDecimal toSub = new BigDecimal(num.toString());
                         memoryValue = memoryValue.subtract(toSub);
-                        Toast.makeText(MainActivity.this, "Current value subtracted from memory", Toast.LENGTH_LONG).show();
+                        showToast("Current value subtracted from memory");
                     }
                 } else {
-                    Toast.makeText(MainActivity.this, "ERROR: Value field is empty", Toast.LENGTH_LONG).show();
+                    showToast("ERROR: Value field is empty");
                 }
-                closeFABMenu();
             }
         });
     }
 
     /* https://stackoverflow.com/a/40647621/9992614 */
     private void openFABMenu(){
+        cancelToast();
+        
         isFABOpen = true;
-        mStore.show(); tStore.setVisibility(View.VISIBLE);
-        mRecall.show(); tRecall.setVisibility(View.VISIBLE);
-        mAdd.show(); tAdd.setVisibility(View.VISIBLE);
-        mSub.show(); tSub.setVisibility(View.VISIBLE);
-        mClear.show(); tClear.setVisibility(View.VISIBLE);
+        showButton(mStore, tStore);
+        showButton(mRecall, tRecall);
+        showButton(mAdd, tAdd);
+        showButton(mSub, tSub);
+        showButton(mClear, tClear);
         fabBg.setVisibility(View.VISIBLE);
 
         openMenu.animate().rotationBy(135);
         openMenu.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorAccent)));
-        mStore.animate().translationX(getResources().getDimension(R.dimen.standard_50));
-        mRecall.animate().translationX(getResources().getDimension(R.dimen.standard_95));
-        mAdd.animate().translationX(getResources().getDimension(R.dimen.standard_140));
-        mSub.animate().translationX(getResources().getDimension(R.dimen.standard_185));
-        mClear.animate().translationX(getResources().getDimension(R.dimen.standard_230));
+        translateOut(mStore, R.dimen.standard_50);
+        translateOut(mRecall, R.dimen.standard_95);
+        translateOut(mAdd, R.dimen.standard_140);
+        translateOut(mSub, R.dimen.standard_185);
+        translateOut(mClear, R.dimen.standard_230);
+    }
+    
+    private void showButton(FloatingActionButton fab, TextView tv) {
+        fab.show();
+        tv.setVisibility(View.VISIBLE);
+    }
+    
+    private void translateOut(FloatingActionButton fab, int distance) {
+        fab.animate().translationX(getResources().getDimension(distance));
     }
 
     private void closeFABMenu(){
+        cancelToast();
+        
         isFABOpen = false;
         fabBg.setVisibility(View.GONE);
         openMenu.animate().rotationBy(-135);
         openMenu.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_orange_light)));
 
-        mStore.animate().translationX(0);
-        mRecall.animate().translationX(0);
-        mAdd.animate().translationX(0);
-        mSub.animate().translationX(0);
+        translateIn(mStore);
+        translateIn(mRecall);
+        translateIn(mAdd);
+        translateIn(mSub);
         mClear.animate().translationX(0).setListener(new Animator.AnimatorListener() {
             public void onAnimationStart(Animator animator) {}
             public void onAnimationCancel(Animator animator) {}
@@ -743,11 +788,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAnimationEnd(Animator animator) {
                 if(!isFABOpen) {
-                    mStore.hide(); tStore.setVisibility(View.GONE);
-                    mRecall.hide(); tRecall.setVisibility(View.GONE);
-                    mAdd.hide(); tAdd.setVisibility(View.GONE);
-                    mSub.hide(); tSub.setVisibility(View.GONE);
-                    mClear.hide(); tClear.setVisibility(View.GONE);
+                    hideButton(mStore, tStore);
+                    hideButton(mRecall, tRecall);
+                    hideButton(mAdd, tAdd);
+                    hideButton(mSub, tSub);
+                    hideButton(mClear, tClear);
                     openMenu.setRotation(0);
                     openMenu.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_orange_light)));
                 } else {
@@ -757,14 +802,28 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    
+    private void translateIn(FloatingActionButton fab) {
+        fab.animate().translationX(0);
+    }
+    
+    private void hideButton(FloatingActionButton fab, TextView tv) {
+        fab.hide();
+        tv.setVisibility(View.GONE);
+    }
 
     private void memoryStoreLogic(boolean positive) {
+        cancelToast();
+
         if(answerSet) {
-            memoryValue = prevAnswer;
+            if(positive) {
+                memoryValue = prevAnswer;
+            } else {
+                memoryValue = prevAnswer.negate();
+            }
         } else {
             if(num.length() == 0) {
-                Toast.makeText(MainActivity.this, "ERROR: Value field is empty", Toast.LENGTH_LONG).show();
-                closeFABMenu();
+                showToast("ERROR: Value field is empty");
                 return;
             }
 
@@ -774,10 +833,13 @@ public class MainActivity extends AppCompatActivity {
                 memoryValue = new BigDecimal(num.toString()).negate();
             }
         }
-        Toast.makeText(MainActivity.this, "Saved current value to memory", Toast.LENGTH_LONG).show();
+        memory_notif.setVisibility(View.VISIBLE);
+        showToast("Saved current value to memory");
     }
 
     private void memoryRecallLogic() {
+        cancelToast();
+
         if(memoryValue != null) {
             BigDecimal toSet = getDisplayAnswer(memoryValue);
             String dispVal = elimWeirdScientificNum(toSet);
@@ -811,7 +873,7 @@ public class MainActivity extends AppCompatActivity {
             memoryRecalled = true;
             setTextFields();
         } else {
-            Toast.makeText(MainActivity.this, "No value stored in memory", Toast.LENGTH_LONG).show();
+            showToast("No value stored in memory");
         }
     }
 
@@ -864,6 +926,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private BigDecimal getDisplayAnswer(BigDecimal answer) {
+        if(answer.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
         return new BigDecimal(answer.toPlainString(), MC).stripTrailingZeros();
     }
 
@@ -884,12 +949,16 @@ public class MainActivity extends AppCompatActivity {
 
         StringBuilder numDisp = num;
         if(answerSet) {
-            numDisp = new StringBuilder(ANSWER_HEAD + num);
+            numDisp = new StringBuilder("" + ANSWER_HEAD + num);
         } else if(memoryRecalled) {
-            numDisp = new StringBuilder(MEMORY_HEAD + num);
+            numDisp = new StringBuilder("" + MEMORY_HEAD + num);
         }
 
-        tNum.setText(numDisp);
+        if(numDisp == num) {
+            tNum.setText(numDisp);
+        } else {
+            tNum.setText(getFormattedString(numDisp, false));
+        }
         tEqn.setText(equation);
 
         if(equationValid(eqn)) {
@@ -901,6 +970,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private SpannableString getFormattedString(StringBuilder toFormat, boolean errorMessage) {
+        SpannableString toRet = new SpannableString(toFormat);
+        if(errorMessage) {
+            toRet.setSpan(new ForegroundColorSpan(Color.RED), 0, toFormat.length(), 0);
+        } else {
+            toRet.setSpan(new RelativeSizeSpan(0.6f), 0, toFormat.indexOf("\n"), 0);
+        }
+
+        return toRet;
+    }
+
+    private void showToast(String text) {
+        if(currToast != null) {
+            currToast.cancel();
+        }
+        currToast = Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG);
+        currToast.show();
+    }
+
+    private void cancelToast() {
+        if(currToast != null) {
+            currToast.cancel();
+            currToast = null;
+        }
+    }
 
     @Override
     public void onBackPressed() {

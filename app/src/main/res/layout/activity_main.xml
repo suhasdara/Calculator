@@ -441,7 +441,7 @@
         android:textStyle="bold"
         android:textColor="#fff"
         app:layout_anchor="@id/mStore"
-        app:layout_anchorGravity="center"/>
+        app:layout_anchorGravity="center" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/openMenu"
@@ -452,4 +452,28 @@
         android:tint="@android:color/background_light"
         app:backgroundTint="@android:color/holo_orange_light"
         app:fabCustomSize="@dimen/standard_45" />
+
+    <View
+        android:id="@+id/mem_not_helper"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        app:layout_anchor="@id/openMenu"
+        app:layout_anchorGravity="center" />
+
+    <TextView
+        android:id="@+id/mem_notification"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:background="@drawable/rounded_corner"
+        android:elevation="6dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:lineSpacingExtra="-5dp"
+        android:text="@string/memory_notif"
+        android:textAlignment="center"
+        android:textColor="#fff"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_anchor="@id/mem_not_helper"
+        app:layout_anchorGravity="top|right" />
 </android.support.design.widget.CoordinatorLayout>

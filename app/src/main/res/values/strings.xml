@@ -27,4 +27,5 @@
     <string name="mem_clear">MC</string>
     <string name="mem_plus">M+</string>
     <string name="mem_minus">M-</string>
+    <string name="memory_notif">M</string>
 </resources>
